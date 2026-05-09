@@ -68,7 +68,7 @@ function IndicatorCard({
   return (
     <article
       onClick={onClick}
-      className="cursor-pointer rounded-xl border border-border bg-card p-4 transition-colors hover:bg-card-hover"
+      className="cursor-pointer rounded-xl border border-border bg-card p-4 transition-colors hover:bg-card-hover last:col-span-2 sm:last:col-span-1"
     >
       <div className="flex min-w-0 items-center gap-1">
         <p className="truncate text-xs font-medium text-market-neutral">{indicator.name}</p>
@@ -90,9 +90,7 @@ export default function MacroTab() {
 
   return (
     <section aria-label="매크로 지표">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-market-neutral">
-        주요 경제 지표
-      </h2>
+      <h2 className="mb-4 text-lg font-medium text-gray-600">주요 경제 지표</h2>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {macro.map((indicator) => (

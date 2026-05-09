@@ -6,25 +6,29 @@ import NewsSection from '@/src/components/common/NewsSection';
 import SentimentTab from '@/src/components/tabs/SentimentTab';
 import SectorTab from '@/src/components/tabs/SectorTab';
 import StockTab from '@/src/components/tabs/StockTab';
+import ChartHintTooltip from '@/src/components/ui/ChartHintTooltip';
 
 // ─── 섹션 헤더 ────────────────────────────────────────────────────────────────
 
 function SectionHeader({
   label,
   accent = 'bull',
+  showHint = false,
 }: {
   label: string;
   accent?: 'bull' | 'risk' | 'neutral';
+  showHint?: boolean;
 }) {
   const dotColor =
     accent === 'bull'    ? 'bg-bull' :
     accent === 'risk'    ? 'bg-risk' :
                            'bg-market-neutral';
   return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className={`size-2 flex-none rounded-full ${dotColor}`} />
-      <h2 className="text-base font-semibold text-foreground">{label}</h2>
+    <div className="mb-8 flex items-center gap-4">
+      <span className={`size-3 flex-none rounded-full ${dotColor}`} />
+      <h2 className="text-2xl font-bold text-foreground">{label}</h2>
       <div className="h-px flex-1 bg-border" />
+      {showHint && <ChartHintTooltip />}
     </div>
   );
 }
@@ -49,7 +53,7 @@ export default function DashboardPage() {
 
           {/* ── 1. 매크로 환경 ────────────────────────────────────────── */}
           <section id="macro" aria-label="매크로 지표" className="scroll-mt-20">
-            <SectionHeader label="매크로 지표" />
+            <SectionHeader label="매크로 지표" showHint />
             <MacroTab />
           </section>
 
@@ -57,7 +61,7 @@ export default function DashboardPage() {
 
           {/* ── 2. 유동성 ─────────────────────────────────────────────── */}
           <section id="liquidity" aria-label="유동성" className="scroll-mt-20">
-            <SectionHeader label="유동성" />
+            <SectionHeader label="유동성" showHint />
             <LiquidityTab />
           </section>
 
@@ -73,7 +77,7 @@ export default function DashboardPage() {
 
           {/* ── 4. 시장 센티멘트 ─────────────────────────────────────── */}
           <section id="sentiment" aria-label="시장 센티멘트" className="scroll-mt-20">
-            <SectionHeader label="시장 센티멘트" />
+            <SectionHeader label="시장 센티멘트" showHint />
             <SentimentTab />
           </section>
 

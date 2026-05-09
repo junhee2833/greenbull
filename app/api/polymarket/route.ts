@@ -120,8 +120,13 @@ export async function GET() {
       return NextResponse.json(items);
     }
 
-    // Gamma에서 데이터를 받았으나 빈 배열인 경우
-    throw new Error('Empty response from Gamma API');
+    // Gamma에서 데이터를 받았으나 빈 배열인 경우 — warn 후 폴백 반환
+    console.warn('[/api/polymarket] Empty response from Gamma API — items.length=0, falling back to cache or mock');
+
+    if (cache) {
+      return NextResponse.json(cache.items, { headers: { 'X-Cache': 'stale' } });
+    }
+    return NextResponse.json(MOCK_ITEMS, { headers: { 'X-Cache': 'mock' } });
   } catch (err) {
     console.error('[/api/polymarket]', err);
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Info } from 'lucide-react';
 import { useMarketStore, selectLiquidityData } from '@/src/store/useMarketStore';
 import { useLiquidityEngine } from '@/src/hooks/useLiquidityEngine';
 import { useSummary } from '@/src/hooks/useSummary';
@@ -9,6 +10,7 @@ import GaugeChart, { LIQUIDITY_SEGMENTS } from '@/src/components/charts/GaugeCha
 import Modal from '@/src/components/ui/Modal';
 import MacroLineChart from '@/src/components/charts/MacroLineChart';
 import InfoTooltip from '@/src/components/ui/InfoTooltip';
+import GreenBullBadge from '@/src/components/ui/GreenBullBadge';
 import type { LiquidityIndicator, LiquidityStateLabel } from '@/src/types/market';
 
 // ─── 지표 설명 ────────────────────────────────────────────────────────────────
@@ -29,9 +31,60 @@ const STATE_CONFIG: Record<LiquidityStateLabel, { label: string; color: string; 
   Tightening: { label: '긴축 국면 (Tightening)', color: 'text-bear',  bg: 'bg-bear/10',  border: 'border-bear/30'  },
 };
 
-const SCORE_COLOR = (s: number) =>
-  s > 0 ? 'text-bull' : s < 0 ? 'text-bear' : 'text-market-neutral';
+// ─── 국면별 투자 제안 툴팁 ───────────────────────────────────────────────────
 
+function LiquidityHelpTooltip() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('touchstart', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('touchstart', close);
+    };
+  }, [open]);
+
+  return (
+    <span
+      ref={ref}
+      className="group/help relative inline-flex flex-none items-center"
+      onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+    >
+      <Info
+        size={13}
+        className="cursor-pointer text-market-neutral/40 transition-colors hover:text-market-neutral/70"
+      />
+      {/* 툴팁 패널 — hover(desktop) or click/tap(mobile) */}
+      <span
+        className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-2.5 w-60 -translate-x-1/2 rounded-2xl bg-gray-900 px-4 py-3.5 shadow-2xl transition-opacity duration-150 ${
+          open ? 'opacity-100' : 'opacity-0 group-hover/help:opacity-100'
+        }`}
+      >
+        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+          국면별 투자 제안
+        </p>
+        <div className="space-y-2">
+          {[
+            { range: '+2 ~ +3', label: '적극 매수 (비중 확대)',  color: 'text-bull' },
+            { range: '-1 ~ +1', label: '기계적 적립 (원칙 유지)', color: 'text-risk' },
+            { range: '-3 ~ -1', label: '현금 확보 (관망 권장)',  color: 'text-bear' },
+          ].map(({ range, label, color }) => (
+            <div key={range} className="flex items-center gap-2.5">
+              <span className={`w-14 flex-none font-mono text-[10px] font-bold ${color}`}>{range}</span>
+              <span className="text-[11px] leading-snug text-white">{label}</span>
+            </div>
+          ))}
+        </div>
+      </span>
+    </span>
+  );
+}
 
 // ─── 계산 결과 패널 ───────────────────────────────────────────────────────────
 
@@ -42,18 +95,18 @@ function CalculationPanel() {
 
   return (
     <div className={`rounded-xl border ${border} bg-card p-5`}>
-      {/* 헤더 */}
-      <div className="mb-5 flex items-center justify-between">
+      {/* 헤더 — 제목 + 뱃지 + 툴팁 */}
+      <div className="mb-5 flex items-center gap-1.5">
         <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
           유동성 통합 지표
         </p>
-        <span className={`text-xs font-mono ${color}`}>
-          업데이트: {new Date(eng.updatedAt).toLocaleString('ko-KR')}
-        </span>
+        <GreenBullBadge />
+        <InfoTooltip text="유동성과 관련된 지표를 통합하여 시장의 전체적인 유동성을 나타낸 지표" />
+        <LiquidityHelpTooltip />
       </div>
 
       {/* 게이지 + 국면 배지 */}
-      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-6 mb-6">
+      <div className="flex flex-col items-center gap-3">
         <GaugeChart
           segments={LIQUIDITY_SEGMENTS}
           normalized={normalized}
@@ -61,35 +114,17 @@ function CalculationPanel() {
           status={label}
           size={200}
         />
-        <div className="flex flex-1 flex-col justify-center gap-2 pt-1 text-center sm:text-left">
+        <div className="flex flex-col items-center gap-2 pb-2 text-center">
           <span className={`inline-block rounded-full border px-3 py-1 text-sm font-semibold ${bg} ${color} ${border}`}>
             {label}
           </span>
         </div>
       </div>
 
-      {/* 중간 계산값 */}
-      <div className="border-t border-border pt-4">
-        <p className="mb-3 text-[10px] uppercase tracking-wider text-market-neutral">
-          세부 계산값
-        </p>
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: '순유동성 현재',  value: eng.formatted.netLiquidityCurrent  },
-            { label: '순유동성 전월',  value: eng.formatted.netLiquidityPrevious },
-            { label: '순유동성 MoM',   value: eng.formatted.netLiquidityMoM,  highlight: true },
-            { label: 'TGA+RRP 변화',   value: eng.formatted.liquidityFlowMoM, highlight: true },
-          ].map(({ label, value, highlight }) => (
-            <div key={label} className="rounded-lg bg-surface p-3">
-              <p className="text-[10px] text-market-neutral">{label}</p>
-              <p className={`mt-1 text-sm font-bold ${highlight ? SCORE_COLOR(parseFloat(value)) : 'text-foreground'}`}>
-                {value}
-              </p>
-            </div>
-          ))}
-        </div>
-
-      </div>
+      {/* 업데이트 — 우측 하단 */}
+      <p className="mt-4 text-right text-xs text-gray-400">
+        최종 업데이트: {new Date(eng.updatedAt).toLocaleString('ko-KR')}
+      </p>
     </div>
   );
 }
@@ -159,8 +194,8 @@ export default function LiquidityTab() {
 
   return (
     <section aria-label="유동성 지표">
+      <h2 className="mb-4 text-lg font-medium text-gray-600">유동성 지표</h2>
       <CalculationPanel />
-      <LiquiditySummarySection />
 
       <h3 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-market-neutral">
         세부 유동성 지표
@@ -170,6 +205,8 @@ export default function LiquidityTab() {
           <LiquidityCard key={ind.id} indicator={ind} onClick={() => setSelected(ind)} />
         ))}
       </div>
+
+      <LiquiditySummarySection />
 
       <Modal
         isOpen={selected !== null}

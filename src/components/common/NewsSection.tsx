@@ -90,7 +90,7 @@ function Thumbnail({ source, thumbnail }: { source: string; thumbnail: string | 
 
 function SkeletonCard() {
   return (
-    <div className="flex flex-none w-72 gap-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
+    <div className="flex w-full gap-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm sm:w-72 sm:flex-none">
       <div className="flex-none">
         <div className="h-16 w-20 rounded-xl bg-gray-200 animate-pulse" />
       </div>
@@ -116,7 +116,7 @@ function NewsCard({ item, rank }: { item: NewsItem; rank: number }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-none w-72 gap-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-border"
+      className="group flex w-full gap-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-border sm:w-72 sm:flex-none"
       aria-label={item.title}
     >
       <div className="flex-none">
@@ -171,16 +171,19 @@ export default function NewsSection() {
     );
   }
 
+  const listClass =
+    'flex flex-col gap-3 sm:flex-row sm:gap-4 sm:overflow-x-auto sm:pb-2 sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden';
+
   if (items === null) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className={listClass}>
         {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
       </div>
     );
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className={listClass}>
       {items.map((item, i) => (
         <NewsCard key={item.id} item={item} rank={i + 1} />
       ))}

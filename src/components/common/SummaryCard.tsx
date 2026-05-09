@@ -44,7 +44,7 @@ interface SummaryCardProps {
 }
 
 export default function SummaryCard({ type, summary, status, hasWarning = false }: SummaryCardProps) {
-  const label = type === 'liquidity' ? 'GPT 유동성 상태 요약' : 'GPT 센티멘트 상태 요약';
+  const label = type === 'liquidity' ? 'AI 유동성 브리핑' : 'AI 센티멘트 브리핑';
 
   return (
     <div className="mt-5 rounded-xl border border-border bg-surface p-5">
@@ -80,9 +80,9 @@ export default function SummaryCard({ type, summary, status, hasWarning = false 
 
           {/* 필드 목록 */}
           <div className="space-y-3 border-t border-border pt-3.5">
-            <FieldRow label="국면 요약" text={summary.regimeSummary} />
-            <FieldRow label="핵심 동인" text={summary.keyDrivers} />
-            <FieldRow label="시장 시사점" text={summary.marketImplication} />
+            <FieldRow label="시장 요약" text={summary.regimeSummary} />
+            <FieldRow label="핵심 요인" text={summary.keyDrivers} />
+            <FieldRow label="인사이트" text={summary.marketImplication} />
           </div>
 
           {/* 주의/경고 */}

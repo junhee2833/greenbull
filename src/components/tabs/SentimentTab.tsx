@@ -9,6 +9,7 @@ import GaugeChart, { SENTIMENT_SEGMENTS, RATIONAL_EMOTIONAL_SEGMENTS } from '@/s
 import Modal from '@/src/components/ui/Modal';
 import MacroLineChart from '@/src/components/charts/MacroLineChart';
 import InfoTooltip from '@/src/components/ui/InfoTooltip';
+import GreenBullBadge from '@/src/components/ui/GreenBullBadge';
 import PolymarketSection from '@/src/components/common/PolymarketSection';
 import type { SentimentIndicator, SentimentStateLabel } from '@/src/types/market';
 
@@ -52,9 +53,16 @@ function KillSwitchBanner({ reason }: { reason: string }) {
 function CalculationPanel() {
   const eng = useSentimentEngine();
   const { color, bg, border, label } = STATE_CONFIG[eng.state];
-
-  // Kill Switch 활성 시 센티멘트 점수로 게이지 위치 표시하되 흐리게
   const normalized = (eng.totalScore + 3) / 6;
+
+  const guideText =
+    eng.totalScore >= 1  ? '적극 분할매수 권장' :
+    eng.totalScore >= -1 ? '분할매수 강도 유지 권장' :
+                           '현금 확보 및 관망 권장';
+  const guideColor =
+    eng.totalScore >= 1  ? 'text-bull' :
+    eng.totalScore >= -1 ? 'text-risk' :
+                           'text-bear';
 
   return (
     <div className={`rounded-xl border ${border} bg-card p-5`}>
@@ -65,62 +73,53 @@ function CalculationPanel() {
 
       {/* 헤더 */}
       <div className="mb-5 flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
-          종합 시장 센티멘트 지표
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+            시장 센티멘트 기반 분할매수 강도
+          </p>
+          <GreenBullBadge />
+          <InfoTooltip text="시장 투자자들의 심리 상태와 관련된 지표들을 종합해 분할 매수 정도를 판단할 수 있도록 하는 지표" />
+        </div>
         <span className="text-xs font-mono text-market-neutral">
           업데이트: {new Date(eng.updatedAt).toLocaleString('ko-KR')}
         </span>
       </div>
 
-      {/* 게이지 + 국면 배지 */}
-      <div className="mb-6 flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-6">
-        <div className={eng.killSwitchActive ? 'opacity-40' : ''}>
-          <GaugeChart
-            segments={SENTIMENT_SEGMENTS}
-            normalized={normalized}
-            score={eng.formatted.totalScore}
-            status={label}
-            size={200}
-          />
-        </div>
-        <div className="flex flex-1 flex-col justify-center gap-2 pt-1 text-center sm:text-left">
-          <span className={`inline-block rounded-full border px-3 py-1 text-sm font-semibold ${bg} ${color} ${border}`}>
-            {label}
-          </span>
-          {eng.killSwitchActive && (
-            <span className="text-xs text-bear">Kill Switch 활성으로 강제 매수 보류</span>
-          )}
-        </div>
-      </div>
-
-      {/* 입력값 + RE 미니 게이지 */}
-      <div className="border-t border-border pt-4">
-        <p className="mb-3 text-[10px] uppercase tracking-wider text-market-neutral">
-          입력값 요약
-        </p>
-
-        {/* 일반 입력값 그리드 */}
-        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {[
-            { label: 'VIX',            value: eng.formatted.vix,             warn: eng.vixValue >= 25 },
-            { label: '공포/탐욕 지수', value: eng.formatted.fearGreed,       warn: eng.fearGreedValue <= 25 },
-            { label: '하이일드 스프레드', value: eng.formatted.highYieldSpread, warn: eng.highYieldSpreadValue >= 5 },
-          ].map(({ label, value, warn }) => (
-            <div key={label} className={`rounded-lg p-3 ${warn ? 'bg-risk/10' : 'bg-surface'}`}>
-              <p className="text-[10px] text-market-neutral">{label}</p>
-              <p className={`mt-1 text-sm font-bold ${warn ? 'text-risk' : 'text-foreground'}`}>{value}</p>
-            </div>
-          ))}
+      {/* 두 게이지 병렬 배치 */}
+      <div className="mb-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-around">
+        {/* 분할매수 강도 게이지 */}
+        <div className="flex flex-col items-center gap-3">
+          <div className={eng.killSwitchActive ? 'opacity-40' : ''}>
+            <GaugeChart
+              segments={SENTIMENT_SEGMENTS}
+              normalized={normalized}
+              score={eng.formatted.totalScore}
+              status={label}
+              size={200}
+            />
+          </div>
+          <div className="flex flex-col items-center gap-2 text-center">
+            <span className={`inline-block rounded-full border px-3 py-1 text-sm font-semibold ${bg} ${color} ${border}`}>
+              {label}
+            </span>
+            <p className={`text-sm font-semibold ${guideColor}`}>{guideText}</p>
+            {eng.killSwitchActive && (
+              <span className="text-xs text-bear">Kill Switch 활성으로 강제 매수 보류</span>
+            )}
+          </div>
         </div>
 
-        {/* 이성/감성 지수 미니 게이지 */}
-        <div className="mb-4 rounded-lg bg-surface p-3">
-          <p className="mb-2 text-[10px] text-market-neutral">
-            이성/감성 여론 지수 &nbsp;
-            <span className="text-foreground font-semibold">{eng.formatted.rationalEmotional}</span>
-            &nbsp;— {eng.descriptions.rationalEmotionalState}
-          </p>
+        {/* 이성/감성 지수 게이지 */}
+        <div className="flex flex-col items-center gap-3 rounded-lg bg-surface p-4">
+          <div className="flex items-center gap-1">
+            <p className="text-center text-[10px] text-market-neutral">
+              이성/감성 지수&nbsp;
+              <span className="font-semibold text-foreground">{eng.formatted.rationalEmotional}</span>
+              &nbsp;— {eng.descriptions.rationalEmotionalState}
+            </p>
+            <GreenBullBadge />
+            <InfoTooltip text="커뮤니티의 글을 분석해 투자자들의 투자 근거가 이성적 판단에 가까운지 감정적 반응에 가까운지 보여주는 지표" />
+          </div>
           <GaugeChart
             segments={RATIONAL_EMOTIONAL_SEGMENTS}
             normalized={eng.rationalEmotionalIndex / 100}
@@ -129,10 +128,11 @@ function CalculationPanel() {
             size={160}
           />
         </div>
+      </div>
 
-
-        {/* Kill Switch 상태 */}
-        <div className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 ${eng.killSwitchActive ? 'bg-bear/10' : 'bg-surface'}`}>
+      {/* Kill Switch 상태 */}
+      <div className="border-t border-border pt-4">
+        <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${eng.killSwitchActive ? 'bg-bear/10' : 'bg-surface'}`}>
           <span className={`text-xs font-bold ${eng.killSwitchActive ? 'text-bear' : 'text-market-neutral'}`}>
             Kill Switch
           </span>
@@ -219,8 +219,8 @@ export default function SentimentTab() {
 
   return (
     <section aria-label="시장 센티멘트">
+      <h2 className="mb-4 text-lg font-medium text-gray-600">시장 센티멘트 기반 분할매수 강도</h2>
       <CalculationPanel />
-      <SentimentSummarySection />
 
       <h3 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-market-neutral">
         세부 센티멘트 지표
@@ -231,6 +231,13 @@ export default function SentimentTab() {
         ))}
       </div>
 
+      {/* ── 예측 시장 (Polymarket) — 세부 지표와 AI 브리핑 사이 ── */}
+      <div className="mt-16">
+        <PolymarketSection />
+      </div>
+
+      <SentimentSummarySection />
+
       <Modal
         isOpen={selected !== null}
         onClose={() => setSelected(null)}
@@ -239,16 +246,6 @@ export default function SentimentTab() {
       >
         {selected && <MacroLineChart indicator={selected} />}
       </Modal>
-
-      {/* ── 실시간 예측 시장 (Polymarket) ── */}
-      <div className="mt-16 border-t border-border pt-12">
-        <div className="mb-6 flex items-center gap-3">
-          <span className="size-2 flex-none rounded-full bg-market-neutral" />
-          <h3 className="text-base font-semibold text-foreground">실시간 예측 시장 (Polymarket)</h3>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-        <PolymarketSection />
-      </div>
     </section>
   );
 }

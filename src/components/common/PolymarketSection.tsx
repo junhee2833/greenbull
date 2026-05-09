@@ -150,9 +150,6 @@ export default function PolymarketSection() {
             <p className="text-[10px] text-market-neutral/70">예측 시장 여론 · 상위 5개 이슈</p>
           </div>
         </div>
-        <span className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-medium text-market-neutral">
-          실시간 · 10분 갱신
-        </span>
       </div>
 
       {/* 카드 그리드 */}
@@ -168,11 +165,6 @@ export default function PolymarketSection() {
         {status === 'success' &&
           items.map((item) => <PolymarketCard key={item.id} item={item} />)}
       </div>
-
-      {/* 푸터 */}
-      <p className="mt-4 text-right text-[10px] text-market-neutral/40">
-        Powered by Polymarket Gamma API
-      </p>
     </div>
   );
 }
