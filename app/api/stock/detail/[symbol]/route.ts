@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import { getCache, setCache, isFresh } from '@/src/lib/server-cache';
 import type { StockDetail, StockValuation, StockFinancials, AnalystTarget } from '@/src/types/stock';
 import type { TimeSeriesPoint } from '@/src/types/market';
+
+const yahooFinance = new YahooFinance();
 
 const CACHE_TTL = 5 * 60 * 1_000; // 5분
 
