@@ -131,7 +131,7 @@ function CalculationPanel() {
 
 // ─── 세부 지표 카드 ───────────────────────────────────────────────────────────
 
-function LiquidityCard({ indicator, onClick }: { indicator: LiquidityIndicator; onClick: () => void }) {
+function LiquidityCard({ indicator, onClick, className = '' }: { indicator: LiquidityIndicator; onClick: () => void; className?: string }) {
   const { change, changeRate, currentValue, unit } = indicator;
   const isUp = change !== null ? change >= 0 : null;
   // Option 1: 절대 수치 방향 — 경제적 맥락 무관, 상승(+)=brand-up, 하락(-)=brand-down
@@ -150,7 +150,7 @@ function LiquidityCard({ indicator, onClick }: { indicator: LiquidityIndicator; 
     changeRate === null ? 'N/A' : `${changeRate >= 0 ? '+' : ''}${changeRate.toFixed(2)}%`;
 
   return (
-    <article onClick={onClick} className="cursor-pointer rounded-xl border border-border bg-card p-4 transition-colors hover:bg-card-hover">
+    <article onClick={onClick} className={`cursor-pointer rounded-xl border border-border bg-card p-4 transition-colors hover:bg-card-hover ${className}`}>
       <div className="flex min-w-0 items-center gap-1">
         <p className="truncate text-xs font-medium text-market-neutral">{indicator.name}</p>
         <InfoTooltip text={LIQUIDITY_DESCRIPTIONS[indicator.id] ?? ''} />
@@ -202,7 +202,12 @@ export default function LiquidityTab() {
       </h3>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {indicators.map((ind) => (
-          <LiquidityCard key={ind.id} indicator={ind} onClick={() => setSelected(ind)} />
+          <LiquidityCard
+            key={ind.id}
+            indicator={ind}
+            onClick={() => setSelected(ind)}
+            className={ind.id === 'fed_rate' ? 'col-span-2 sm:col-span-1' : ''}
+          />
         ))}
       </div>
 

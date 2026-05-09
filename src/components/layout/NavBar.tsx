@@ -9,7 +9,7 @@ import PdfExportButton from '@/src/components/common/PdfExportButton';
 const SECTIONS = [
   { id: 'macro',     label: '매크로' },
   { id: 'liquidity', label: '유동성' },
-  { id: 'sentiment', label: '시장 센티멘트' },
+  { id: 'sentiment', label: '센티멘트' },
   { id: 'sector',    label: '산업' },
   { id: 'stock',     label: '종목' },
 ] as const;
@@ -90,7 +90,7 @@ export default function NavBar() {
         {/* 로고 */}
         <div className="flex items-center gap-2 flex-none pr-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.ico" alt="GreenBull" className="size-7 object-contain" />
+          <img src="/icon.png" alt="GreenBull" className="size-7 object-contain" />
           <span className="text-sm font-semibold tracking-tight text-foreground">
             GreenBull{' '}
             <span className="font-normal text-market-neutral">Dashboard</span>

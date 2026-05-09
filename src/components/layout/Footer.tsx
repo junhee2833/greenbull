@@ -2,7 +2,7 @@
 
 const DATA_SOURCES = [
   'Yahoo Finance',
-  'FRED API',
+  'FRED',
   'Reddit',
   'Polymarket',
   'CNN Business',

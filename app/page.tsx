@@ -91,9 +91,7 @@ export default function DashboardPage() {
 
           {/* 개별 종목 구분 — 별도 분석 경험으로 시각적으로 분리 */}
           <div className="my-16 border-t-2 border-border">
-            <p className="mt-4 text-xs uppercase tracking-widest text-market-neutral/40">
-              개별 종목 상세 분석 — 티커 또는 회사명으로 검색
-            </p>
+            <p className="mt-4 text-xs uppercase tracking-widest text-market-neutral/40">            </p>
           </div>
 
           {/* ── 7. 개별 종목 ─────────────────────────────────────────── */}

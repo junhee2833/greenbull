@@ -566,31 +566,32 @@ function StockDetailView({ stock }: { stock: StockDetail }) {
       <StockHeader stock={stock} />
       <MarketContextPanel />
 
-      {/* Analyst target (if available) */}
+      {/* 1. 차트 */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-market-neutral">
+          가격 차트
+        </p>
+        <MacroLineChart
+          indicator={indicator}
+          intradaySeries={intradaySeries}
+          intradayLoading={intradayLoading}
+          onPeriodChange={handlePeriodChange}
+        />
+      </div>
+
+      {/* 2. 52주 가격 */}
+      <RangeBar52W low={stock.week52Low} high={stock.week52High} current={stock.currentPrice} />
+
+      {/* 3. 핵심 재무지표 */}
+      <FinancialMetrics stock={stock} />
+
+      {/* 4. 밸류에이션/섹터평균 비교 */}
+      <ValuationPanel stock={stock} />
+
+      {/* 5. 애널리스트 목표주가 */}
       {stock.analystTarget && (
         <AnalystTargetPanel target={stock.analystTarget} currentPrice={stock.currentPrice} />
       )}
-
-      {/* Price chart + Valuation */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3 rounded-xl border border-border bg-card p-5">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-market-neutral">
-            가격 차트
-          </p>
-          <MacroLineChart
-            indicator={indicator}
-            intradaySeries={intradaySeries}
-            intradayLoading={intradayLoading}
-            onPeriodChange={handlePeriodChange}
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <ValuationPanel stock={stock} />
-        </div>
-      </div>
-
-      <RangeBar52W low={stock.week52Low} high={stock.week52High} current={stock.currentPrice} />
-      <FinancialMetrics stock={stock} />
     </div>
   );
 }

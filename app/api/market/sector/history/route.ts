@@ -10,6 +10,21 @@ const CACHE_TTL = 10 * 60 * 1_000; // 10분
 type Period = '1W' | '1M' | '3M' | '1Y';
 const PERIOD_DAYS: Record<Period, number> = { '1W': 7, '1M': 30, '3M': 90, '1Y': 365 };
 
+// SPDR 섹터 ETF AUM (십억 달러, 2026년 기준 고정값 — 블록 크기 비례에만 사용)
+const ETF_AUM_BILLION: Record<string, number> = {
+  XLK:  70,  // Technology          (최대)
+  XLF:  40,  // Financials
+  XLV:  37,  // Healthcare
+  XLE:  26,  // Energy
+  XLC:  21,  // Communication Services
+  XLI:  19,  // Industrials
+  XLY:  17,  // Consumer Discretionary
+  XLP:  14,  // Consumer Staples
+  XLU:  13,  // Utilities
+  XLB:   8,  // Materials
+  XLRE:  5,  // Real Estate         (최소)
+};
+
 const SECTOR_ETFS: Record<string, { id: string; name: string }> = {
   XLK:  { id: 'tech',          name: '정보기술 (IT)'  },
   XLF:  { id: 'financials',    name: '금융'           },
@@ -40,7 +55,7 @@ async function fetchSectorWithPeriod(
   }) as any[];
 
   if (!Array.isArray(history) || history.length < 2) {
-    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: null, updatedAt: now };
+    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: ETF_AUM_BILLION[symbol] ?? null, updatedAt: now };
   }
 
   const oldest = history[0];
@@ -49,7 +64,7 @@ async function fetchSectorWithPeriod(
   const endPrice   = latest.close;
 
   if (!startPrice || !endPrice) {
-    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: null, updatedAt: now };
+    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: ETF_AUM_BILLION[symbol] ?? null, updatedAt: now };
   }
 
   const returnRate = ((endPrice - startPrice) / startPrice) * 100;
@@ -63,7 +78,7 @@ async function fetchSectorWithPeriod(
     returnRate:    Math.round(returnRate * 100) / 100,
     estimatedFlow: Math.round(estimatedFlow * 100) / 100,
     volume:        Math.round(avgVolume / 1e6 * 100) / 100,
-    marketSize:    null,
+    marketSize:    ETF_AUM_BILLION[symbol] ?? null,
     updatedAt:     now,
   };
 }
@@ -91,7 +106,7 @@ export async function GET(req: NextRequest) {
     const [sym, meta] = Object.entries(SECTOR_ETFS)[i];
     if (result.status === 'fulfilled') return result.value;
     console.error(`[sector/history] ${sym}:`, (result as any).reason);
-    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: null, updatedAt: now };
+    return { id: meta.id, name: meta.name, returnRate: null, estimatedFlow: null, volume: null, marketSize: ETF_AUM_BILLION[sym] ?? null, updatedAt: now };
   });
 
   const response = { sectors, updatedAt: now };
