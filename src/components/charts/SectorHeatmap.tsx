@@ -86,15 +86,13 @@ export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
     const cx     = x + width  / 2;
     const cy     = y + height / 2;
 
-    // 블록 크기에 따른 텍스트 표시 단계
-    const showName   = width > 95 && height > 48;
-    const showTicker = width > 50 && height > 26;
-    const showRate   = width > 60 && height > 50;
+    // 한글 섹터명: 모바일·데스크톱 동일 기준 (기존 ticker 기준과 동일하게 낮춤)
+    const showLabel = width > 50 && height > 26;
+    const showRate  = width > 60 && height > 50;
 
-    // Y 좌표 계산 (중앙 기준)
-    const nameY   = cy - 13;
-    const tickerY = showName ? cy + 1  : (showRate ? cy - 7 : cy + 4);
-    const rateY   = showName ? cy + 15 : cy + 8;
+    // Y 좌표 (중앙 기준)
+    const labelY = showRate ? cy - 7 : cy + 4;
+    const rateY  = cy + 8;
 
     const handleMouseEnter = (e: React.MouseEvent<SVGRectElement>) => {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -117,27 +115,15 @@ export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
           style={{ cursor: 'default' }}
         />
 
-        {/* 섹터명 — 큰 블록만 */}
-        {showName && (
+        {/* 한글 섹터명 — 중간 이상 블록 (모바일 포함) */}
+        {showLabel && (
           <text
-            x={cx} y={nameY}
+            x={cx} y={labelY}
             textAnchor="middle" dominantBaseline="middle"
             fill="white" fontSize={11} fontWeight={700}
             style={{ pointerEvents: 'none' }}
           >
             {name.split(' ')[0]}
-          </text>
-        )}
-
-        {/* ETF 티커 — 중간 이상 블록 */}
-        {showTicker && (
-          <text
-            x={cx} y={tickerY}
-            textAnchor="middle" dominantBaseline="middle"
-            fill="white" fontSize={showName ? 10 : 11} fontWeight={showName ? 400 : 700}
-            style={{ pointerEvents: 'none' }}
-          >
-            {ticker}
           </text>
         )}
 

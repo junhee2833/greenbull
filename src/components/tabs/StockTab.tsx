@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Search, X, TrendingUp, TrendingDown, ChevronRight, Target, Clock } from 'lucide-react';
 import { useSearchHistory } from '@/src/hooks/useSearchHistory';
 import { useLiquidityEngine } from '@/src/hooks/useLiquidityEngine';
@@ -264,10 +265,10 @@ function StockHeader({ stock }: { stock: StockDetail }) {
 function AnalystTargetPanel({ target, currentPrice }: { target: AnalystTarget; currentPrice: number }) {
   const rangeWidth = target.high - target.low;
   const currentPct = rangeWidth > 0
-    ? Math.max(0, Math.min(100, ((currentPrice - target.low) / rangeWidth) * 100))
+    ? Math.max(3, Math.min(97, ((currentPrice - target.low) / rangeWidth) * 100))
     : 50;
   const meanPct = rangeWidth > 0
-    ? Math.max(0, Math.min(100, ((target.mean - target.low) / rangeWidth) * 100))
+    ? Math.max(3, Math.min(97, ((target.mean - target.low) / rangeWidth) * 100))
     : 50;
   const isUpside = target.upside >= 0;
 
@@ -283,48 +284,77 @@ function AnalystTargetPanel({ target, currentPrice }: { target: AnalystTarget; c
         </div>
       </div>
 
-      {/* Upside badge */}
+      {/* Consensus headline + upside badge */}
       <div className="mb-5 flex items-baseline gap-3">
         <p className="text-2xl font-black text-foreground">${fmtPrice(target.mean)}</p>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-          isUpside
-            ? 'bg-bull/10 text-bull'
-            : 'bg-bear/10 text-bear'
+          isUpside ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'
         }`}>
           {isUpside ? '+' : ''}{target.upside.toFixed(1)}% 괴리율
         </span>
       </div>
 
-      {/* Range bar */}
-      <div className="space-y-2.5">
-        <div className="relative h-3 w-full rounded-full bg-surface overflow-hidden">
-          {/* Track */}
-          <div className="absolute inset-0 rounded-full bg-linear-to-r from-bear/30 via-risk/20 to-bull/30" />
-          {/* Mean marker */}
+      {/* Range visualiser */}
+      <div className="overflow-visible px-3">
+        {/* Current price label — ABOVE track */}
+        <div className="relative h-9 overflow-visible">
           <div
-            className="absolute top-0 h-full w-0.5 bg-foreground/40"
+            className="absolute -translate-x-1/2 flex flex-col items-center gap-0.5"
+            style={{ left: `${currentPct}%` }}
+          >
+            <span className="whitespace-nowrap text-[10px] font-semibold text-blue-500">현재가</span>
+            <span className="whitespace-nowrap text-xs font-black text-blue-500">${fmtPrice(currentPrice)}</span>
+          </div>
+        </div>
+
+        {/* Track */}
+        <div className="relative h-3 w-full overflow-visible rounded-full bg-surface">
+          <div className="absolute inset-0 rounded-full bg-linear-to-r from-bear/30 via-risk/20 to-bull/30" />
+          {/* Consensus ◆ diamond marker (amber) */}
+          <div
+            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-sm border-2 border-white bg-amber-400 shadow-md"
             style={{ left: `${meanPct}%` }}
           />
-          {/* Current price marker */}
+          {/* Current ● circle marker (blue) — renders on top */}
           <div
-            className="absolute top-1/2 h-5 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground shadow-md border-2 border-white"
+            className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-blue-500 shadow-md"
             style={{ left: `${currentPct}%` }}
           />
         </div>
 
-        <div className="flex items-end justify-between text-xs">
-          <div>
-            <p className="text-market-neutral">최저 목표</p>
-            <p className="font-bold text-bear">${fmtPrice(target.low)}</p>
+        {/* Consensus label — BELOW track */}
+        <div className="relative h-9 overflow-visible">
+          <div
+            className="absolute -translate-x-1/2 flex flex-col items-center gap-0.5 pt-1"
+            style={{ left: `${meanPct}%` }}
+          >
+            <span className="whitespace-nowrap text-[10px] font-semibold text-amber-500">컨센서스</span>
+            <span className="whitespace-nowrap text-xs font-black text-amber-500">${fmtPrice(target.mean)}</span>
           </div>
-          <div className="text-center">
-            <p className="text-market-neutral">컨센서스</p>
-            <p className="font-bold text-foreground">${fmtPrice(target.mean)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-market-neutral">최고 목표</p>
-            <p className="font-bold text-bull">${fmtPrice(target.high)}</p>
-          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-2 flex items-center justify-center gap-6">
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-3.5 w-3.5 flex-none rounded-full border border-white bg-blue-500 shadow-sm" />
+          <span className="text-[11px] text-market-neutral">현재 주가</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 flex-none rotate-45 rounded-sm border border-white bg-amber-400 shadow-sm" />
+          <span className="text-[11px] text-market-neutral">컨센서스 평균</span>
+        </div>
+      </div>
+
+      {/* Low / High */}
+      <div className="mt-4 flex justify-between px-3 text-xs">
+        <div>
+          <p className="text-market-neutral">최저 목표</p>
+          <p className="font-bold text-bear">${fmtPrice(target.low)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-market-neutral">최고 목표</p>
+          <p className="font-bold text-bull">${fmtPrice(target.high)}</p>
         </div>
       </div>
     </div>
@@ -528,6 +558,102 @@ function FinancialMetrics({ stock }: { stock: StockDetail }) {
   );
 }
 
+// ─── Mock data (placeholder — yahoo-finance2 연동 예정) ───────────────────────
+
+const MOCK_OWNERSHIP = [
+  { name: '기관', value: 72, color: '#22C55E' },
+  { name: '소액주주·기타', value: 28, color: '#94A3B8' },
+];
+
+const MOCK_INSIDER_TRADES = [
+  { quarter: "Q1 '24", buys: 3, sells: 8 },
+  { quarter: "Q2 '24", buys: 1, sells: 5 },
+  { quarter: "Q3 '24", buys: 2, sells: 11 },
+  { quarter: "Q4 '24", buys: 4, sells: 6 },
+];
+
+// ─── Institutional Ownership Chart ────────────────────────────────────────────
+
+function InstitutionalOwnershipChart() {
+  return (
+    <div className="flex-1 min-w-0 rounded-xl border border-border bg-card p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+          기관 보유 비중
+        </p>
+      </div>
+      <ResponsiveContainer width="100%" height={180}>
+        <PieChart>
+          <Pie
+            data={MOCK_OWNERSHIP}
+            cx="50%"
+            cy="50%"
+            innerRadius={52}
+            outerRadius={78}
+            paddingAngle={3}
+            dataKey="value"
+            isAnimationActive={false}
+          >
+            {MOCK_OWNERSHIP.map((entry, i) => (
+              <Cell key={i} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(v: any) => [`${v}%`]}
+            contentStyle={{ borderRadius: '8px', fontSize: '11px', border: '1px solid #e2e8f0' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="mt-2 flex justify-center gap-5">
+        {MOCK_OWNERSHIP.map(item => (
+          <div key={item.name} className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-[11px] text-market-neutral">{item.name}</span>
+            <span className="text-[11px] font-bold text-foreground">{item.value}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Insider Trading Chart ────────────────────────────────────────────────────
+
+function InsiderTradingChart() {
+  return (
+    <div className="flex-1 min-w-0 rounded-xl border border-border bg-card p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+          분기별 내부자 거래 동향
+        </p>
+      </div>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={MOCK_INSIDER_TRADES} barCategoryGap="32%" barGap={2}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <XAxis dataKey="quarter" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={18} allowDecimals={false} />
+          <Tooltip
+            formatter={(v: any, name: any) => [`${v}명`, name === 'buys' ? '매수' : '매도']}
+            contentStyle={{ borderRadius: '8px', fontSize: '11px', border: '1px solid #e2e8f0' }}
+          />
+          <Bar dataKey="buys" name="매수" fill="#22C55E" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="sells" name="매도" fill="#EF4444" radius={[3, 3, 0, 0]} isAnimationActive={false} />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="mt-2 flex justify-center gap-5">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-5 flex-none rounded-sm bg-bull" />
+          <span className="text-[11px] text-market-neutral">매수 인원</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-5 flex-none rounded-sm bg-bear" />
+          <span className="text-[11px] text-market-neutral">매도 인원</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Stock detail layout ──────────────────────────────────────────────────────
 
 function StockDetailView({ stock }: { stock: StockDetail }) {
@@ -592,6 +718,12 @@ function StockDetailView({ stock }: { stock: StockDetail }) {
       {stock.analystTarget && (
         <AnalystTargetPanel target={stock.analystTarget} currentPrice={stock.currentPrice} />
       )}
+
+      {/* 6. 기관 보유 비중 & 내부자 거래 */}
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <InstitutionalOwnershipChart />
+        <InsiderTradingChart />
+      </div>
     </div>
   );
 }
@@ -629,7 +761,7 @@ export default function StockTab() {
               종목 검색
             </p>
             <p className="text-[11px] text-market-neutral/50">
-              티커 또는 회사명으로 검색 · Yahoo Finance 실시간 데이터
+              티커 또는 회사명으로 검색
             </p>
           </div>
           {selected && (

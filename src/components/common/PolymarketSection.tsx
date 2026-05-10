@@ -146,9 +146,7 @@ export default function PolymarketSection() {
             <TrendingUp size={14} className="text-risk" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Polymarket 주요 안건</p>
-            <p className="text-[10px] text-market-neutral/70">예측 시장 여론 · 상위 5개 이슈</p>
-          </div>
+            <p className="text-sm font-semibold text-foreground">Polymarket 주요 안건</p>          </div>
         </div>
       </div>
 

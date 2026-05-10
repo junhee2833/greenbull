@@ -91,8 +91,8 @@ export default function SectorTab() {
                 섹터 Heatmap
               </p>
               {updatedAt && (
-                <p className="text-[10px] text-market-neutral/60">
-                  {new Date(updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기준
+                <p className="text-xs text-gray-400">
+                  {new Date(updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>

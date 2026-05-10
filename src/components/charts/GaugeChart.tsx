@@ -21,7 +21,7 @@ export interface PastValue {
 interface GaugeChartProps {
   segments:    GaugeSegment[];
   normalized:  number;          // 0 = left/min, 1 = right/max
-  score:       string;          // large centre text
+  score?:      string;          // large centre text (omit to hide)
   status?:     string;          // subtitle below score
   pastValues?: PastValue[];     // historical row (1주·1개월·1년 전)
   size?:       number;          // rendered px width (default 280)
@@ -236,18 +236,20 @@ export default function GaugeChart({
 
       {/* ── Score + status ── */}
       <div style={{ textAlign: 'center', marginTop: -2 }}>
-        <span
-          style={{
-            display: 'block',
-            fontSize: px(0.118),
-            fontWeight: 800,
-            color: scoreColor,
-            lineHeight: 1.1,
-            letterSpacing: '-0.03em',
-          }}
-        >
-          {score}
-        </span>
+        {score && (
+          <span
+            style={{
+              display: 'block',
+              fontSize: px(0.118),
+              fontWeight: 800,
+              color: scoreColor,
+              lineHeight: 1.1,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            {score}
+          </span>
+        )}
 
         {status && (
           <span

@@ -48,11 +48,11 @@ function KillSwitchBanner({ reason }: { reason: string }) {
   );
 }
 
-// ─── 계산 결과 패널 ───────────────────────────────────────────────────────────
+// ─── 센티멘트 게이지 카드 ────────────────────────────────────────────────────
 
-function CalculationPanel() {
+function SentimentGaugeCard() {
   const eng = useSentimentEngine();
-  const { color, bg, border, label } = STATE_CONFIG[eng.state];
+  const { border } = STATE_CONFIG[eng.state];
   const normalized = (eng.totalScore + 3) / 6;
 
   const guideText =
@@ -66,7 +66,7 @@ function CalculationPanel() {
 
   return (
     <div className={`rounded-xl border ${border} bg-card p-5`}>
-      {/* Kill Switch 경고 */}
+      {/* Kill Switch 경고 — 활성 시에만 */}
       {eng.killSwitchActive && eng.killSwitchReason && (
         <KillSwitchBanner reason={eng.killSwitchReason} />
       )}
@@ -80,69 +80,68 @@ function CalculationPanel() {
           <GreenBullBadge />
           <InfoTooltip text="시장 투자자들의 심리 상태와 관련된 지표들을 종합해 분할 매수 정도를 판단할 수 있도록 하는 지표" />
         </div>
-        <span className="text-xs font-mono text-market-neutral">
-          업데이트: {new Date(eng.updatedAt).toLocaleString('ko-KR')}
+        <span className="text-xs text-gray-400">
+          {new Date(eng.updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
-      {/* 두 게이지 병렬 배치 */}
-      <div className="mb-6 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-around">
-        {/* 분할매수 강도 게이지 */}
-        <div className="flex flex-col items-center gap-3">
-          <div className={eng.killSwitchActive ? 'opacity-40' : ''}>
-            <GaugeChart
-              segments={SENTIMENT_SEGMENTS}
-              normalized={normalized}
-              score={eng.formatted.totalScore}
-              status={label}
-              size={200}
-            />
-          </div>
-          <div className="flex flex-col items-center gap-2 text-center">
-            <span className={`inline-block rounded-full border px-3 py-1 text-sm font-semibold ${bg} ${color} ${border}`}>
-              {label}
-            </span>
-            <p className={`text-sm font-semibold ${guideColor}`}>{guideText}</p>
-            {eng.killSwitchActive && (
-              <span className="text-xs text-bear">Kill Switch 활성으로 강제 매수 보류</span>
-            )}
-          </div>
-        </div>
-
-        {/* 이성/감성 지수 게이지 */}
-        <div className="flex flex-col items-center gap-3 rounded-lg bg-surface p-4">
-          <div className="flex items-center gap-1">
-            <p className="text-center text-[10px] text-market-neutral">
-              이성/감성 지수&nbsp;
-              <span className="font-semibold text-foreground">{eng.formatted.rationalEmotional}</span>
-              &nbsp;— {eng.descriptions.rationalEmotionalState}
-            </p>
-            <GreenBullBadge />
-            <InfoTooltip text="커뮤니티의 글을 분석해 투자자들의 투자 근거가 이성적 판단에 가까운지 감정적 반응에 가까운지 보여주는 지표" />
-          </div>
+      {/* 게이지 */}
+      <div className="flex flex-col items-center gap-3">
+        <div className={eng.killSwitchActive ? 'opacity-40' : ''}>
           <GaugeChart
-            segments={RATIONAL_EMOTIONAL_SEGMENTS}
-            normalized={eng.rationalEmotionalIndex / 100}
-            score={eng.formatted.rationalEmotional}
-            status={eng.descriptions.rationalEmotionalState}
-            size={160}
+            segments={SENTIMENT_SEGMENTS}
+            normalized={normalized}
+            score={eng.formatted.totalScore}
+            size={200}
           />
         </div>
-      </div>
-
-      {/* Kill Switch 상태 */}
-      <div className="border-t border-border pt-4">
-        <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${eng.killSwitchActive ? 'bg-bear/10' : 'bg-surface'}`}>
-          <span className={`text-xs font-bold ${eng.killSwitchActive ? 'text-bear' : 'text-market-neutral'}`}>
-            Kill Switch
-          </span>
-          <span className={`text-xs ${eng.killSwitchActive ? 'text-bear' : 'text-market-neutral'}`}>
-            {eng.killSwitchActive
-              ? `활성 — 하이일드 스프레드 ${eng.highYieldSpreadValue.toFixed(2)}% ≥ 5%`
-              : `비활성 — 하이일드 스프레드 ${eng.highYieldSpreadValue.toFixed(2)}% < 5%`}
-          </span>
+        <div className="flex flex-col items-center gap-2 pb-2 text-center">
+          <p className={`text-sm font-semibold ${guideColor}`}>{guideText}</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── 이성/감성 지수 카드 ──────────────────────────────────────────────────────
+
+function REIndexCard() {
+  const eng = useSentimentEngine();
+  const normalized = eng.rationalEmotionalIndex / 100;
+
+  // 현재 위치에 해당하는 세그먼트 색상 (기존 GaugeChart status 텍스트 색상과 동일)
+  const docAngle = normalized * 180 - 90;
+  const statusColor =
+    RATIONAL_EMOTIONAL_SEGMENTS.find(s => docAngle >= s.startDoc && docAngle <= s.endDoc)?.color ??
+    RATIONAL_EMOTIONAL_SEGMENTS[2].color;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      {/* 헤더 */}
+      <div className="mb-5 flex items-center gap-1.5">
+        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+          이성/감성 지수
+        </p>
+        <GreenBullBadge />
+        <InfoTooltip text="커뮤니티의 글을 분석해 투자자들의 투자 근거가 이성적 판단에 가까운지 감정적 반응에 가까운지 보여주는 지표" />
+      </div>
+
+      {/* 게이지 + 상태 텍스트 (2줄) */}
+      <div className="flex flex-col items-center">
+        <GaugeChart
+          segments={RATIONAL_EMOTIONAL_SEGMENTS}
+          normalized={normalized}
+          size={160}
+        />
+        <p className="text-sm font-bold" style={{ color: statusColor }}>
+          {eng.formatted.rationalEmotional}
+        </p>
+      </div>
+
+      {/* 하단 — 센티멘트 카드 하단 텍스트와 동일 스타일 */}
+      <p className="mt-2 text-center text-sm font-semibold text-bull">
+        {eng.descriptions.rationalEmotionalState}
+      </p>
     </div>
   );
 }
@@ -219,8 +218,11 @@ export default function SentimentTab() {
 
   return (
     <section aria-label="시장 센티멘트">
-      <h2 className="mb-4 text-lg font-medium text-gray-600">시장 센티멘트 기반 분할매수 강도</h2>
-      <CalculationPanel />
+      <h2 className="mb-4 text-lg font-medium text-gray-600">주요 센티멘트 지표</h2>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SentimentGaugeCard />
+        <REIndexCard />
+      </div>
 
       <h3 className="mb-4 mt-6 text-xs font-semibold uppercase tracking-wider text-market-neutral">
         세부 센티멘트 지표

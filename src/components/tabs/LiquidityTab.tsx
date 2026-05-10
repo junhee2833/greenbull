@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { Info } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { useMarketStore, selectLiquidityData } from '@/src/store/useMarketStore';
 import { useLiquidityEngine } from '@/src/hooks/useLiquidityEngine';
 import { useSummary } from '@/src/hooks/useSummary';
@@ -31,78 +30,27 @@ const STATE_CONFIG: Record<LiquidityStateLabel, { label: string; color: string; 
   Tightening: { label: '긴축 국면 (Tightening)', color: 'text-bear',  bg: 'bg-bear/10',  border: 'border-bear/30'  },
 };
 
-// ─── 국면별 투자 제안 툴팁 ───────────────────────────────────────────────────
-
-function LiquidityHelpTooltip() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    document.addEventListener('touchstart', close);
-    return () => {
-      document.removeEventListener('mousedown', close);
-      document.removeEventListener('touchstart', close);
-    };
-  }, [open]);
-
-  return (
-    <span
-      ref={ref}
-      className="group/help relative inline-flex flex-none items-center"
-      onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-    >
-      <Info
-        size={13}
-        className="cursor-pointer text-market-neutral/40 transition-colors hover:text-market-neutral/70"
-      />
-      {/* 툴팁 패널 — hover(desktop) or click/tap(mobile) */}
-      <span
-        className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-2.5 w-60 -translate-x-1/2 rounded-2xl bg-gray-900 px-4 py-3.5 shadow-2xl transition-opacity duration-150 ${
-          open ? 'opacity-100' : 'opacity-0 group-hover/help:opacity-100'
-        }`}
-      >
-        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          국면별 투자 제안
-        </p>
-        <div className="space-y-2">
-          {[
-            { range: '+2 ~ +3', label: '적극 매수 (비중 확대)',  color: 'text-bull' },
-            { range: '-1 ~ +1', label: '기계적 적립 (원칙 유지)', color: 'text-risk' },
-            { range: '-3 ~ -1', label: '현금 확보 (관망 권장)',  color: 'text-bear' },
-          ].map(({ range, label, color }) => (
-            <div key={range} className="flex items-center gap-2.5">
-              <span className={`w-14 flex-none font-mono text-[10px] font-bold ${color}`}>{range}</span>
-              <span className="text-[11px] leading-snug text-white">{label}</span>
-            </div>
-          ))}
-        </div>
-      </span>
-    </span>
-  );
-}
-
 // ─── 계산 결과 패널 ───────────────────────────────────────────────────────────
 
 function CalculationPanel() {
   const eng = useLiquidityEngine();
-  const { color, bg, border, label } = STATE_CONFIG[eng.state];
+  const { color, border, label } = STATE_CONFIG[eng.state];
   const normalized = (eng.totalScore + 3) / 6;
 
   return (
     <div className={`rounded-xl border ${border} bg-card p-5`}>
-      {/* 헤더 — 제목 + 뱃지 + 툴팁 */}
-      <div className="mb-5 flex items-center gap-1.5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
-          유동성 통합 지표
-        </p>
-        <GreenBullBadge />
-        <InfoTooltip text="유동성과 관련된 지표를 통합하여 시장의 전체적인 유동성을 나타낸 지표" />
-        <LiquidityHelpTooltip />
+      {/* 헤더 — 제목 + 뱃지 + 툴팁 + 업데이트 시각 */}
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+            유동성 통합 지표
+          </p>
+          <GreenBullBadge />
+          <InfoTooltip text="유동성과 관련된 지표를 통합하여 시장의 전체적인 유동성을 나타낸 지표" />
+        </div>
+        <span className="text-xs text-gray-400">
+          {new Date(eng.updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+        </span>
       </div>
 
       {/* 게이지 + 국면 배지 */}
@@ -111,20 +59,13 @@ function CalculationPanel() {
           segments={LIQUIDITY_SEGMENTS}
           normalized={normalized}
           score={eng.formatted.totalScore}
-          status={label}
           size={200}
         />
         <div className="flex flex-col items-center gap-2 pb-2 text-center">
-          <span className={`inline-block rounded-full border px-3 py-1 text-sm font-semibold ${bg} ${color} ${border}`}>
-            {label}
-          </span>
+          <p className={`text-sm font-semibold ${color}`}>{label}</p>
         </div>
       </div>
 
-      {/* 업데이트 — 우측 하단 */}
-      <p className="mt-4 text-right text-xs text-gray-400">
-        최종 업데이트: {new Date(eng.updatedAt).toLocaleString('ko-KR')}
-      </p>
     </div>
   );
 }
