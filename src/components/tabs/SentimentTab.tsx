@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useMarketStore, selectSentimentData } from '@/src/store/useMarketStore';
 import { useSentimentEngine } from '@/src/hooks/useSentimentEngine';
 import { useSummary } from '@/src/hooks/useSummary';
+import { useBreakpointValue } from '@/src/hooks/useBreakpointValue';
 import SummaryCard from '@/src/components/common/SummaryCard';
 import GaugeChart, { SENTIMENT_SEGMENTS, RATIONAL_EMOTIONAL_SEGMENTS } from '@/src/components/charts/GaugeChart';
 import Modal from '@/src/components/ui/Modal';
@@ -54,6 +55,7 @@ function SentimentGaugeCard() {
   const eng = useSentimentEngine();
   const { border } = STATE_CONFIG[eng.state];
   const normalized = (eng.totalScore + 3) / 6;
+  const gaugeSize = useBreakpointValue(160, 200);
 
   const guideText =
     eng.totalScore >= 1  ? '적극 분할매수 권장' :
@@ -92,7 +94,9 @@ function SentimentGaugeCard() {
             segments={SENTIMENT_SEGMENTS}
             normalized={normalized}
             score={eng.formatted.totalScore}
-            size={200}
+            size={gaugeSize}
+            leftLabel="현금 확보"
+            rightLabel="적극 분할매수"
           />
         </div>
         <div className="flex flex-col items-center gap-2 pb-2 text-center">
@@ -105,25 +109,25 @@ function SentimentGaugeCard() {
 
 // ─── 이성/감성 지수 카드 ──────────────────────────────────────────────────────
 
+const MOCK_RE_UPDATED_AT = '오후 09:10';
+
 function REIndexCard() {
   const eng = useSentimentEngine();
   const normalized = eng.rationalEmotionalIndex / 100;
-
-  // 현재 위치에 해당하는 세그먼트 색상 (기존 GaugeChart status 텍스트 색상과 동일)
-  const docAngle = normalized * 180 - 90;
-  const statusColor =
-    RATIONAL_EMOTIONAL_SEGMENTS.find(s => docAngle >= s.startDoc && docAngle <= s.endDoc)?.color ??
-    RATIONAL_EMOTIONAL_SEGMENTS[2].color;
+  const gaugeSize = useBreakpointValue(160, 200);
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       {/* 헤더 */}
-      <div className="mb-5 flex items-center gap-1.5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
-          이성/감성 지수
-        </p>
-        <GreenBullBadge />
-        <InfoTooltip text="커뮤니티의 글을 분석해 투자자들의 투자 근거가 이성적 판단에 가까운지 감정적 반응에 가까운지 보여주는 지표" />
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
+            이성/감성 지수
+          </p>
+          <GreenBullBadge />
+          <InfoTooltip text="커뮤니티의 글을 분석해 투자자들의 투자 근거가 이성적 판단에 가까운지 감정적 반응에 가까운지 보여주는 지표" />
+        </div>
+        <span className="text-xs text-gray-400">{MOCK_RE_UPDATED_AT}</span>
       </div>
 
       {/* 게이지 + 상태 텍스트 (2줄) */}
@@ -131,9 +135,11 @@ function REIndexCard() {
         <GaugeChart
           segments={RATIONAL_EMOTIONAL_SEGMENTS}
           normalized={normalized}
-          size={160}
+          size={gaugeSize}
+          leftLabel="이성 중심"
+          rightLabel="감정 중심"
         />
-        <p className="text-sm font-bold" style={{ color: statusColor }}>
+        <p className="text-sm font-bold text-bull">
           {eng.formatted.rationalEmotional}
         </p>
       </div>

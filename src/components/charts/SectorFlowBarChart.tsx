@@ -1,5 +1,6 @@
 'use client';
 
+import { useBreakpointValue } from '@/src/hooks/useBreakpointValue';
 import {
   BarChart,
   Bar,
@@ -47,6 +48,7 @@ interface SectorFlowBarChartProps {
 }
 
 export default function SectorFlowBarChart({ sectors }: SectorFlowBarChartProps) {
+  const chartHeight = useBreakpointValue(200, 300);
   const data = [...sectors]
     .sort((a, b) => (b.estimatedFlow ?? 0) - (a.estimatedFlow ?? 0))
     .map(s => ({ name: s.name, flow: s.estimatedFlow ?? 0, returnRate: s.returnRate ?? 0 }));
@@ -55,7 +57,7 @@ export default function SectorFlowBarChart({ sectors }: SectorFlowBarChartProps)
   const domainPad = maxAbs * 1.15;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={chartHeight}>
       <BarChart
         data={data}
         layout="vertical"

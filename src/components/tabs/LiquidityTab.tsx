@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useMarketStore, selectLiquidityData } from '@/src/store/useMarketStore';
 import { useLiquidityEngine } from '@/src/hooks/useLiquidityEngine';
 import { useSummary } from '@/src/hooks/useSummary';
+import { useBreakpointValue } from '@/src/hooks/useBreakpointValue';
 import SummaryCard from '@/src/components/common/SummaryCard';
 import GaugeChart, { LIQUIDITY_SEGMENTS } from '@/src/components/charts/GaugeChart';
 import Modal from '@/src/components/ui/Modal';
@@ -36,6 +37,7 @@ function CalculationPanel() {
   const eng = useLiquidityEngine();
   const { color, border, label } = STATE_CONFIG[eng.state];
   const normalized = (eng.totalScore + 3) / 6;
+  const gaugeSize = useBreakpointValue(160, 200);
 
   return (
     <div className={`rounded-xl border ${border} bg-card p-5`}>
@@ -59,7 +61,9 @@ function CalculationPanel() {
           segments={LIQUIDITY_SEGMENTS}
           normalized={normalized}
           score={eng.formatted.totalScore}
-          size={200}
+          size={gaugeSize}
+          leftLabel="긴축"
+          rightLabel="완화"
         />
         <div className="flex flex-col items-center gap-2 pb-2 text-center">
           <p className={`text-sm font-semibold ${color}`}>{label}</p>

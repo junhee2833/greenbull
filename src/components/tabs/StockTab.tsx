@@ -6,6 +6,7 @@ import { Search, X, TrendingUp, TrendingDown, ChevronRight, Target, Clock } from
 import { useSearchHistory } from '@/src/hooks/useSearchHistory';
 import { useLiquidityEngine } from '@/src/hooks/useLiquidityEngine';
 import { useSentimentEngine } from '@/src/hooks/useSentimentEngine';
+import { useBreakpointValue } from '@/src/hooks/useBreakpointValue';
 import GaugeChart, { LIQUIDITY_SEGMENTS, SENTIMENT_SEGMENTS } from '@/src/components/charts/GaugeChart';
 import MacroLineChart from '@/src/components/charts/MacroLineChart';
 import type { StockDetail, StockSearchResult, AnalystTarget, IntradayPoint } from '@/src/types/stock';
@@ -243,7 +244,7 @@ function StockHeader({ stock }: { stock: StockDetail }) {
         </div>
 
         <div className="flex flex-col items-start gap-1 sm:items-end">
-          <p className="text-3xl font-black tracking-tight text-foreground">
+          <p className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
             ${fmtPrice(stock.currentPrice)}
           </p>
           <div className={`flex items-center gap-1.5 ${isUp ? 'text-bull' : 'text-bear'}`}>
@@ -286,7 +287,7 @@ function AnalystTargetPanel({ target, currentPrice }: { target: AnalystTarget; c
 
       {/* Consensus headline + upside badge */}
       <div className="mb-5 flex items-baseline gap-3">
-        <p className="text-2xl font-black text-foreground">${fmtPrice(target.mean)}</p>
+        <p className="text-xl sm:text-2xl font-black text-foreground">${fmtPrice(target.mean)}</p>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
           isUpside ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'
         }`}>
@@ -363,24 +364,16 @@ function AnalystTargetPanel({ target, currentPrice }: { target: AnalystTarget; c
 
 // ─── Market Context Panel ─────────────────────────────────────────────────────
 
-const LIQUIDITY_INVEST_HINT: Record<string, string> = {
-  Easing:     '유동성 완화 국면 — 매수 환경 우호적',
-  Neutral:    '유동성 중립 국면 — 선별적 접근 권장',
-  Tightening: '유동성 긴축 국면 — 보수적 접근 권장',
-};
-
-const SENTIMENT_INVEST_HINT: Record<string, string> = {
-  'Aggressive Buy':  '적극 매수 국면 — 역발상 매수 기회',
-  'Buy Recommended': '매수 추천 국면 — 분할 매수 고려',
-  'DCA Maintain':    '기계적 적립식 국면 — 정기 매수 유지',
-  'Cash Reserve':    '현금 확보 국면 — 신중한 접근',
-  'Wait':            '관망 국면 — 현금 비중 유지',
-  'Risk Override':   '리스크 필터 활성 — 매수 보류',
+const LIQUIDITY_STATE_LABEL: Record<string, string> = {
+  Easing:     '완화 국면',
+  Neutral:    '중립 국면',
+  Tightening: '긴축 국면',
 };
 
 function MarketContextPanel() {
-  const liq  = useLiquidityEngine();
-  const sent = useSentimentEngine();
+  const liq      = useLiquidityEngine();
+  const sent     = useSentimentEngine();
+  const gaugeSize = useBreakpointValue(130, 160);
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
@@ -395,10 +388,10 @@ function MarketContextPanel() {
             normalized={(liq.totalScore + 3) / 6}
             score={liq.formatted.totalScore}
             status={liq.state}
-            size={160}
+            size={gaugeSize}
           />
           <p className="mt-2 text-center text-xs text-market-neutral leading-snug">
-            {LIQUIDITY_INVEST_HINT[liq.state]}
+            {LIQUIDITY_STATE_LABEL[liq.state] ?? liq.state}
           </p>
         </div>
         <div className="flex flex-col items-center rounded-lg bg-surface p-4">
@@ -408,11 +401,8 @@ function MarketContextPanel() {
             normalized={(sent.totalScore + 3) / 6}
             score={sent.formatted.totalScore}
             status={sent.state}
-            size={160}
+            size={gaugeSize}
           />
-          <p className="mt-2 text-center text-xs text-market-neutral leading-snug">
-            {SENTIMENT_INVEST_HINT[sent.state] ?? sent.state}
-          </p>
         </div>
       </div>
     </div>
@@ -542,7 +532,7 @@ function FinancialMetrics({ stock }: { stock: StockDetail }) {
       <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-market-neutral">
         핵심 재무 지표
       </p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {metrics.map(({ label, value, sub, warn }) => (
           <div
             key={label}
@@ -566,10 +556,10 @@ const MOCK_OWNERSHIP = [
 ];
 
 const MOCK_INSIDER_TRADES = [
-  { quarter: "Q1 '24", buys: 3, sells: 8 },
-  { quarter: "Q2 '24", buys: 1, sells: 5 },
-  { quarter: "Q3 '24", buys: 2, sells: 11 },
-  { quarter: "Q4 '24", buys: 4, sells: 6 },
+  { quarter: "Q2 '25", buys: 3, sells: 8 },
+  { quarter: "Q3 '25", buys: 1, sells: 5 },
+  { quarter: "Q4 '25", buys: 2, sells: 11 },
+  { quarter: "Q1 '26", buys: 4, sells: 6 },
 ];
 
 // ─── Institutional Ownership Chart ────────────────────────────────────────────

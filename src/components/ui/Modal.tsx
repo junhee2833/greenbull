@@ -37,7 +37,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className={`relative z-10 w-full ${maxWidth} max-h-[90vh] flex flex-col rounded-2xl border border-border bg-card shadow-2xl`}>
-        <div className="flex flex-none items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex flex-none items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-4">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           <button
             onClick={onClose}
@@ -47,7 +47,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
             <X size={16} />
           </button>
         </div>
-        <div className="overflow-y-auto p-6">{children}</div>
+        <div className="overflow-y-auto p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );

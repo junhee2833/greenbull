@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useId } from 'react';
 import { useSpring } from 'framer-motion';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,6 +25,8 @@ interface GaugeChartProps {
   status?:     string;          // subtitle below score
   pastValues?: PastValue[];     // historical row (1주·1개월·1년 전)
   size?:       number;          // rendered px width (default 280)
+  leftLabel?:  string;          // curved label at the left arc end
+  rightLabel?: string;          // curved label at the right arc end
 }
 
 // ─── Segment presets ─────────────────────────────────────────────────────────
@@ -190,6 +192,8 @@ export default function GaugeChart({
   status,
   pastValues,
   size = 280,
+  leftLabel,
+  rightLabel,
 }: GaugeChartProps) {
   const n          = Math.max(0, Math.min(1, normalized));
   const canvasRef  = useRef<HTMLCanvasElement>(null);
@@ -224,15 +228,71 @@ export default function GaugeChart({
   const scoreColor = segmentColorAt(segments, n);
   const px         = (r: number) => Math.round(size * r);
 
+  // Curved end-label geometry — all values derived from size so nothing is hard-coded
+  const uid   = useId().replace(/:/g, '');
+  const cx    = size / 2;
+  const Rv    = Math.min(cx - 4, canvasH - 4);      // matches drawGauge's R
+  const TWv   = Rv * 0.28;                           // matches drawGauge's TW
+  const tR    = Rv + Math.max(4, Math.round(TWv * 0.2)); // just outside the track outer edge
+  const SPAN  = 50 * Math.PI / 180;                 // arc span for each label
+  const lfs   = Math.max(9, Math.round(size * 0.055)); // label font size
+
+  // Arc endpoints (canvas angle: π = left end, 2π = right end)
+  const lEndX = cx  + tR * Math.cos(Math.PI + SPAN);
+  const lEndY = canvasH + tR * Math.sin(Math.PI + SPAN);
+  const rStaX = cx  + tR * Math.cos(2 * Math.PI - SPAN);
+  const rStaY = canvasH + tR * Math.sin(2 * Math.PI - SPAN);
+
   return (
     <div style={{ width: size, fontFamily: 'inherit', userSelect: 'none' }}>
 
-      {/* ── Canvas gauge ── */}
-      <canvas
-        ref={canvasRef}
-        style={{ display: 'block', width: size, height: canvasH }}
-        aria-label={`게이지: ${score}`}
-      />
+      {/* ── Canvas gauge + SVG label overlay ── */}
+      <div style={{ position: 'relative', width: size, height: canvasH }}>
+        <canvas
+          ref={canvasRef}
+          style={{ display: 'block', width: size, height: canvasH }}
+          aria-label={`게이지: ${score}`}
+        />
+        {(leftLabel || rightLabel) && (
+          <svg
+            style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', pointerEvents: 'none' }}
+            width={size}
+            height={canvasH}
+            aria-hidden="true"
+          >
+            <defs>
+              {leftLabel && (
+                <path
+                  id={`${uid}gl`}
+                  d={`M ${cx - tR} ${canvasH} A ${tR} ${tR} 0 0 1 ${lEndX} ${lEndY}`}
+                  fill="none"
+                />
+              )}
+              {rightLabel && (
+                <path
+                  id={`${uid}gr`}
+                  d={`M ${rStaX} ${rStaY} A ${tR} ${tR} 0 0 1 ${cx + tR} ${canvasH}`}
+                  fill="none"
+                />
+              )}
+            </defs>
+            {leftLabel && (
+              <text fill="#9CA3AF" fontSize={lfs} fontWeight={500} fontFamily="inherit">
+                <textPath href={`#${uid}gl`} textAnchor="middle" startOffset="50%">
+                  {leftLabel}
+                </textPath>
+              </text>
+            )}
+            {rightLabel && (
+              <text fill="#9CA3AF" fontSize={lfs} fontWeight={500} fontFamily="inherit">
+                <textPath href={`#${uid}gr`} textAnchor="middle" startOffset="50%">
+                  {rightLabel}
+                </textPath>
+              </text>
+            )}
+          </svg>
+        )}
+      </div>
 
       {/* ── Score + status ── */}
       <div style={{ textAlign: 'center', marginTop: -2 }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useBreakpointValue } from '@/src/hooks/useBreakpointValue';
 import { Treemap, ResponsiveContainer } from 'recharts';
 import type { SectorData } from '@/src/types/market';
 
@@ -53,6 +54,7 @@ interface SectorHeatmapProps {
 export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const chartHeight = useBreakpointValue(220, 320);
 
   // marketSize 기준 내림차순 정렬 — 큰 섹터가 좌상단에 배치
   const data = [...sectors]
@@ -146,7 +148,7 @@ export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
 
   return (
     <div ref={containerRef} className="relative">
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <Treemap
           data={data}
           dataKey="size"
