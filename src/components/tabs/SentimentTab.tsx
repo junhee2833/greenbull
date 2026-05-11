@@ -74,15 +74,15 @@ function SentimentGaugeCard() {
       )}
 
       {/* 헤더 */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+      <div className="mb-5 flex items-start justify-between">
+        <div className="flex items-start gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-wider text-market-neutral">
-            시장 센티멘트 기반 분할매수 강도
+            시장 센티멘트 기반<br />분할매수 강도
           </p>
           <GreenBullBadge />
           <InfoTooltip text="시장 투자자들의 심리 상태와 관련된 지표들을 종합해 분할 매수 정도를 판단할 수 있도록 하는 지표" />
         </div>
-        <span className="text-xs text-gray-400">
+        <span className="flex-none ml-2 text-xs text-gray-400">
           {new Date(eng.updatedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>

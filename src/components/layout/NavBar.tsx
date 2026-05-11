@@ -85,10 +85,10 @@ export default function NavBar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-white border-b border-border-subtle">
-      <div className="mx-auto flex h-14 max-w-360 items-stretch px-6 md:px-10 lg:px-16">
+      <div className="mx-auto flex flex-wrap md:flex-nowrap md:h-14 max-w-360 md:items-stretch px-6 md:px-10 lg:px-16">
 
-        {/* 로고 */}
-        <div className="flex items-center gap-2 flex-none pr-8">
+        {/* 로고 — Row 1 좌측 (모바일) / 데스크탑 좌측 */}
+        <div className="order-1 flex items-center gap-2 flex-none h-14 md:pr-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon.png" alt="GreenBull" className="size-7 object-contain" />
           <span className="text-sm font-semibold tracking-tight text-foreground">
@@ -97,9 +97,16 @@ export default function NavBar() {
           </span>
         </div>
 
-        {/* 섹션 내비게이션 — 헤더 내 통합 */}
+        {/* 우측 액션 영역 — Row 1 우측 (모바일) / 데스크탑 우측 */}
+        <div className="order-2 md:order-3 flex items-center gap-2 flex-none h-14 ml-auto">
+          <UpdatedAt />
+          <ServiceStatusBadge />
+          <PdfExportButton />
+        </div>
+
+        {/* 섹션 내비게이션 — Row 2 전체 (모바일) / 데스크탑 중앙 */}
         <nav
-          className="flex flex-1 items-stretch overflow-x-auto"
+          className="order-3 md:order-2 w-full md:w-auto md:flex-1 flex items-center md:items-stretch overflow-x-auto [&::-webkit-scrollbar]:hidden"
           aria-label="섹션 내비게이션"
         >
           {SECTIONS.map((section) => {
@@ -109,7 +116,7 @@ export default function NavBar() {
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
                 className={[
-                  'relative flex items-center flex-none whitespace-nowrap px-4 text-sm font-medium transition-colors',
+                  'relative flex items-center flex-none whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors',
                   isActive
                     ? 'text-[#191F28] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-[#3182F6]'
                     : 'text-[#4E5968] hover:text-[#191F28]',
@@ -126,7 +133,7 @@ export default function NavBar() {
             href="/calendar"
             target="_blank"
             rel="noopener noreferrer"
-            className="relative flex items-center flex-none whitespace-nowrap px-4 text-sm font-medium text-[#4E5968] transition-colors hover:text-[#191F28]"
+            className="relative flex items-center flex-none whitespace-nowrap px-4 py-3 text-sm font-medium text-[#4E5968] transition-colors hover:text-[#191F28]"
           >
             캘린더
           </a>
@@ -136,18 +143,11 @@ export default function NavBar() {
             href="https://mixed-sawfish-59b.notion.site/GreenBull-Dashboard-35a7165ff804805b8ea5cc9ccfabe95d?source=copy_link"
             target="_blank"
             rel="noopener noreferrer"
-            className="relative flex items-center flex-none whitespace-nowrap px-4 text-sm font-medium text-[#4E5968] transition-colors hover:text-[#191F28]"
+            className="relative flex items-center flex-none whitespace-nowrap px-4 py-3 text-sm font-medium text-[#4E5968] transition-colors hover:text-[#191F28]"
           >
             서비스 소개
           </a>
         </nav>
-
-        {/* 우측 액션 영역 */}
-        <div className="flex items-center gap-2 flex-none">
-          <UpdatedAt />
-          <ServiceStatusBadge />
-          <PdfExportButton />
-        </div>
 
       </div>
     </header>

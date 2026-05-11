@@ -135,7 +135,7 @@ export default function MacroLineChart({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-2xl font-bold text-foreground">
             {fmtValue(indicator.currentValue ?? 0, indicator.unit)}
@@ -144,13 +144,13 @@ export default function MacroLineChart({
             {changeText}
           </p>
         </div>
-        {/* Period selector */}
-        <div className="flex gap-1">
+        {/* Period selector — horizontal scroll on mobile */}
+        <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PERIODS.map(p => (
             <button
               key={p}
               onClick={() => handlePeriod(p)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+              className={`flex-none rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                 period === p
                   ? 'bg-bull/10 text-bull'
                   : 'text-market-neutral hover:bg-surface hover:text-foreground'

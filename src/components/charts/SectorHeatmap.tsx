@@ -88,13 +88,14 @@ export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
     const cx     = x + width  / 2;
     const cy     = y + height / 2;
 
-    // 한글 섹터명: 모바일·데스크톱 동일 기준 (기존 ticker 기준과 동일하게 낮춤)
-    const showLabel = width > 50 && height > 26;
-    const showRate  = width > 60 && height > 50;
+    // 동적 폰트 크기 — 셀 너비에 비례, 최소 8px 보장
+    const labelFontSize = Math.max(8, Math.min(11, Math.floor(width / 6)));
+    const rateFontSize  = Math.max(8, Math.min(10, Math.floor(width / 7)));
 
-    // Y 좌표 (중앙 기준)
-    const labelY = showRate ? cy - 7 : cy + 4;
-    const rateY  = cy + 8;
+    // 두 줄 모두 세로로 쌓을 공간이 있으면 위아래로, 없으면 겹쳐서 중앙 부근에 렌더링
+    const stackable = height >= labelFontSize + rateFontSize + 4;
+    const labelY    = stackable ? cy - rateFontSize / 2 - 2 : cy - 1;
+    const rateY     = stackable ? cy + labelFontSize / 2 + 2 : cy + rateFontSize + 2;
 
     const handleMouseEnter = (e: React.MouseEvent<SVGRectElement>) => {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -117,31 +118,27 @@ export default function SectorHeatmap({ sectors }: SectorHeatmapProps) {
           style={{ cursor: 'default' }}
         />
 
-        {/* 한글 섹터명 — 중간 이상 블록 (모바일 포함) */}
-        {showLabel && (
-          <text
-            x={cx} y={labelY}
-            textAnchor="middle" dominantBaseline="middle"
-            fill="white" fontSize={11} fontWeight={700}
-            style={{ pointerEvents: 'none' }}
-          >
-            {name.split(' ')[0]}
-          </text>
-        )}
+        {/* 섹터명 — 항상 렌더링, 동적 폰트 크기 (최소 8px) */}
+        <text
+          x={cx} y={labelY}
+          textAnchor="middle" dominantBaseline="middle"
+          fill="white" fontSize={labelFontSize} fontWeight={700}
+          style={{ pointerEvents: 'none' }}
+        >
+          {name.split(' ')[0]}
+        </text>
 
-        {/* 수익률 — 충분히 큰 블록만 */}
-        {showRate && (
-          <text
-            x={cx} y={rateY}
-            textAnchor="middle" dominantBaseline="middle"
-            fill="rgba(255,255,255,0.85)" fontSize={10}
-            style={{ pointerEvents: 'none' }}
-          >
-            {returnRate !== null
-              ? `${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%`
-              : 'N/A'}
-          </text>
-        )}
+        {/* 수익률 — 항상 렌더링, 동적 폰트 크기 (최소 8px) */}
+        <text
+          x={cx} y={rateY}
+          textAnchor="middle" dominantBaseline="middle"
+          fill="rgba(255,255,255,0.85)" fontSize={rateFontSize}
+          style={{ pointerEvents: 'none' }}
+        >
+          {returnRate !== null
+            ? `${returnRate >= 0 ? '+' : ''}${returnRate.toFixed(2)}%`
+            : 'N/A'}
+        </text>
       </g>
     );
   }
