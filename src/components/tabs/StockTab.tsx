@@ -532,7 +532,7 @@ function FinancialMetrics({ stock }: { stock: StockDetail }) {
       <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-market-neutral">
         핵심 재무 지표
       </p>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
         {metrics.map(({ label, value, sub, warn }) => (
           <div
             key={label}

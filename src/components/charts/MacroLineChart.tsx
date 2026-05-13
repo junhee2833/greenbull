@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   AreaChart,
   Area,
@@ -16,10 +16,10 @@ import { useLocalStorage } from '@/src/hooks/useLocalStorage';
 
 // ─── Period ───────────────────────────────────────────────────────────────────
 
-type Period = '1D' | '1W' | '1M' | '3M' | '1Y' | 'MAX';
-const PERIODS: Period[] = ['1D', '1W', '1M', '3M', '1Y', 'MAX'];
+type Period = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | 'MAX';
+const PERIODS: Period[] = ['1D', '1W', '1M', '3M', '6M', '1Y', 'MAX'];
 const PERIOD_DAYS: Record<Period, number> = {
-  '1D': 1, '1W': 7, '1M': 30, '3M': 90, '1Y': 365, MAX: Infinity,
+  '1D': 1, '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, MAX: Infinity,
 };
 
 function filterSeries(data: TimeSeriesPoint[], period: Period): TimeSeriesPoint[] {
@@ -33,10 +33,7 @@ function fmtDate(dateStr: string, period: Period): string {
   if (period === '1D') {
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
-  if (period === '1W' || period === '1M') {
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  if (period === '3M') {
+  if (period === '1W' || period === '1M' || period === '3M' || period === '6M') {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
   return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
@@ -53,6 +50,27 @@ function fmtValue(v: number, unit: string): string {
 
 // '1D' is intraday-only — not meaningful to restore across sessions.
 const PERSIST_PERIOD = (p: Period) => p !== '1D';
+
+// ─── Dummy time series (fallback / test data when API returns no history) ─────
+// Deterministic LCG so values are stable across renders.
+
+function generateDummySeries(): TimeSeriesPoint[] {
+  const base = new Date('2026-05-13');
+  const points: TimeSeriesPoint[] = [];
+  let price = 195.0;
+  for (let i = 520; i >= 0; i--) {
+    const d = new Date(base);
+    d.setDate(d.getDate() - i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const seed  = (i * 1664525 + 1013904223) & 0x7fffffff;
+    const delta = ((seed % 200) / 100 - 1.0) * 0.85;
+    price = Math.max(150, Math.min(230, price + delta));
+    points.push({ date: d.toISOString().slice(0, 10), value: parseFloat(price.toFixed(2)) });
+  }
+  return points;
+}
+
+const DUMMY_SERIES: TimeSeriesPoint[] = generateDummySeries();
 
 // ─── Toss Light Theme palette ─────────────────────────────────────────────────
 
@@ -103,19 +121,24 @@ export default function MacroLineChart({
     { shouldPersist: PERSIST_PERIOD },
   );
 
+  // Local state for the header change/rate display — updated whenever chartData changes.
+  const [displayChange,     setDisplayChange]     = useState<number>(indicator.change ?? 0);
+  const [displayChangeRate, setDisplayChangeRate] = useState<number>(indicator.changeRate ?? 0);
+
   const handlePeriod = (p: Period) => {
     setPeriod(p);
     onPeriodChange?.(p);
   };
 
-  const isUp = (indicator.change ?? 0) >= 0;
-  const lineColor = isUp ? BULL_COLOR : BEAR_COLOR;
   const gradId = `grad-${indicator.id}`;
 
-  const dailySeries = useMemo(
-    () => filterSeries(indicator.timeSeries ?? [], period),
-    [indicator.timeSeries, period],
-  );
+  const dailySeries = useMemo(() => {
+    // Use real API data when available, fall back to hardcoded dummy series.
+    const source = (indicator.timeSeries ?? []).length >= 2
+      ? indicator.timeSeries!
+      : DUMMY_SERIES;
+    return filterSeries(source, period);
+  }, [indicator.timeSeries, period]);
 
   // 1D uses intraday data; others use daily
   const chartData: { date: string; value: number }[] = useMemo(() => {
@@ -125,10 +148,26 @@ export default function MacroLineChart({
     return dailySeries;
   }, [period, intradaySeries, dailySeries]);
 
-  const changeSign = (indicator.change ?? 0) >= 0 ? '+' : '';
-  const changeText = indicator.change !== null
-    ? `${changeSign}${indicator.change.toFixed(2)} (${changeSign}${indicator.changeRate?.toFixed(2)}%)`
-    : 'N/A';
+  // Recalculate change & changeRate from the visible data range each time it updates.
+  // Formula: change = last - first,  changeRate = (change / first) * 100
+  useEffect(() => {
+    if (chartData.length < 2) {
+      setDisplayChange(indicator.change ?? 0);
+      setDisplayChangeRate(indicator.changeRate ?? 0);
+      return;
+    }
+    const first = chartData[0].value;
+    const last  = chartData[chartData.length - 1].value;
+    const ch    = last - first;
+    const cr    = first !== 0 ? (ch / first) * 100 : 0;
+    setDisplayChange(ch);
+    setDisplayChangeRate(cr);
+  }, [chartData, indicator.change, indicator.changeRate]);
+
+  const isUp       = displayChange >= 0;
+  const lineColor  = isUp ? BULL_COLOR : BEAR_COLOR;
+  const changeSign = displayChange >= 0 ? '+' : '';
+  const changeText = `${changeSign}${displayChange.toFixed(2)} (${changeSign}${displayChangeRate.toFixed(2)}%)`;
 
   const showSkeleton = period === '1D' && intradayLoading;
 
