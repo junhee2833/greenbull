@@ -623,7 +623,7 @@ function InsiderTradingChart() {
           <XAxis dataKey="quarter" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={18} allowDecimals={false} />
           <Tooltip
-            formatter={(v: any, name: any) => [`${v}명`, name === 'buys' ? '매수' : '매도']}
+            formatter={(v: any, name: any) => [`${v}명`, name]}
             contentStyle={{ borderRadius: '8px', fontSize: '11px', border: '1px solid #e2e8f0' }}
           />
           <Bar dataKey="buys" name="매수" fill="#22C55E" radius={[3, 3, 0, 0]} isAnimationActive={false} />

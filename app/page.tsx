@@ -48,7 +48,7 @@ export default function DashboardPage() {
     <>
       <NavBar />
 
-      <main className="min-h-screen pt-20 pb-24">
+      <main className="min-h-screen pt-28 md:pt-20 pb-24">
         <div className="mx-auto max-w-360 px-6 md:px-10 lg:px-16">
 
           {/* ── 1. 매크로 환경 ────────────────────────────────────────── */}
